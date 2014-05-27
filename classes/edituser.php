@@ -4,7 +4,7 @@
  * Class registration
  * handles the user registration
  */
-class Registration
+class edituser
 {
     /**
      * @var object $db_connection The database connection
@@ -25,25 +25,31 @@ class Registration
      */
     public function __construct()
     {
-        if (isset($_POST["register"])) {
-            $this->registerNewUser();
+        if (isset($_POST["edituser"])) {
+            $this->editUser($_POST["user_id"]);
+        }
+        else if (isset($_POST["deleteuser"])) {
+            $this->deleteUser($_POST["user_id"]);
         }
     }
 
+
+    public function currentUser(){
+        if (isset ($_POST["user_id"]))
+        return $_POST["user_id"];
+        else return false;
+    }
     /**
      * handles the entire registration process. checks all error possibilities
      * and creates a new user in the database if everything is fine
      */
-    private function registerNewUser()
+
+    private function editUser($user_id)
     {
         if (empty($_POST['user_name'])) {
             $this->errors[] = "Empty Username";
-        } elseif (empty($_POST['user_password_new']) || empty($_POST['user_password_repeat'])) {
-            $this->errors[] = "Empty Password";
-        } elseif ($_POST['user_password_new'] !== $_POST['user_password_repeat']) {
-            $this->errors[] = "Password and password repeat are not the same";
-        } elseif (strlen($_POST['user_password_new']) < 6) {
-            $this->errors[] = "Password has a minimum length of 6 characters";
+
+
         } elseif (strlen($_POST['user_name']) > 64 || strlen($_POST['user_name']) < 2) {
             $this->errors[] = "Username cannot be shorter than 2 or longer than 64 characters";
         } elseif (!preg_match('/^[a-z\d]{2,64}$/i', $_POST['user_name'])) {
@@ -61,9 +67,6 @@ class Registration
             && !empty($_POST['user_email'])
             && strlen($_POST['user_email']) <= 64
             && filter_var($_POST['user_email'], FILTER_VALIDATE_EMAIL)
-            && !empty($_POST['user_password_new'])
-            && !empty($_POST['user_password_repeat'])
-            && ($_POST['user_password_new'] === $_POST['user_password_repeat'])
         ) {
             // create a database connection
             $this->db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
@@ -80,33 +83,27 @@ class Registration
                 $user_name = $this->db_connection->real_escape_string(strip_tags($_POST['user_name'], ENT_QUOTES));
                 $user_email = $this->db_connection->real_escape_string(strip_tags($_POST['user_email'], ENT_QUOTES));
 
-                $user_password = $_POST['user_password_new'];
-                $user_type = $_POST['user_type'];
 
-                // crypt the user's password with PHP 5.5's password_hash() function, results in a 60 character
-                // hash string. the PASSWORD_DEFAULT constant is defined by the PHP 5.5, or if you are using
-                // PHP 5.3/5.4, by the password hashing compatibility library
-                $user_password_hash = password_hash($user_password, PASSWORD_DEFAULT);
+                $user_type = $_POST['user_type'];
 
 
 
                 // check if user or email address already exists
-                $sql = "SELECT * FROM users WHERE user_name = '" . $user_name . "' OR user_email = '" . $user_email . "';";
+                $sql = "SELECT * FROM users WHERE (user_name = '" . $user_name . "' OR user_email = '" . $user_email . "') AND user_id <> ".$user_id.";";
                 $query_check_user_name = $this->db_connection->query($sql);
 
                 if ($query_check_user_name->num_rows == 1) {
                     $this->errors[] = "Sorry, that username / email address is already taken.";
                 } else {
                     // write new user's data into database
-                    $sql = "INSERT INTO users (user_name, user_password_hash, user_email, user_type)
-                            VALUES('" . $user_name . "', '" . $user_password_hash . "', '" . $user_email . "', '".$user_type."');";
+                    $sql = "UPDATE users  SET user_name='".$user_name."', user_email='".$user_email."', user_type='".$user_type."'  WHERE user_id = ".$user_id.";";
                     $query_new_user_insert = $this->db_connection->query($sql);
 
                     // if user has been added successfully
                     if ($query_new_user_insert) {
-                        $this->messages[] = "New account has been created successfully.";
+                        $this->messages[] = "User <span>".$_POST['user_name']."</span> has been updated.";
                     } else {
-                        $this->errors[] = "Sorry, adding new user failed. Please go back and try again.";
+                        $this->errors[] = "Sorry, editing user failed. Please go back and try again.";
                     }
                 }
             } else {
@@ -117,5 +114,13 @@ class Registration
         }
     }
 
-
+    private function deleteUser($user_id){
+        $this->db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        $sql = "UPDATE users  SET user_active = 0 WHERE user_id = ".$user_id.";";
+        $update = $this->db_connection->query($sql);
+        if($update)
+            $this->messages[] = "User <span>".$_POST['user_name']."</span> has been deleted.";
+        else
+            $this->errors[] = "Sorry, deleting user failed. Please go back and try again.";
+    }
 }

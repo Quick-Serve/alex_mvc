@@ -1,6 +1,6 @@
 <div class="container-fluid">
 
-    <div class="row row-offcanvas row-offcanvas-left">
+
 
        <?php include 'sidebar.php'; ?>
 
@@ -45,7 +45,7 @@
                       
                 </div>
             </div>
-
+    <h1>REMINDERS</h1>
            
 
         </div><!--/row-->

@@ -41,6 +41,42 @@ class Login
     }
 
     /**
+     * simply return the current state of the user's login
+     * @return boolean user's login status
+     */
+    public function isUserLoggedIn()
+    {
+        if (isset($_SESSION['user_login_status']) AND $_SESSION['user_login_status'] == 1) {
+            return true;
+        }
+        // default return
+        return false;
+    }
+
+    /**
+     * simply return the current state of the user's login
+     * @return boolean user's login status
+     */
+    public function isAdmin(){
+        if (isset($_SESSION['user_login_status']) AND $_SESSION['user_login_status'] == 1) {
+            $sql = "SELECT * FROM users WHERE user_name LIKE '" .  $_SESSION['user_name']  . "';";
+            $this->db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+            $result = $this->db_connection->query($sql);
+            if( !$result)
+                die('error sql');
+            $user= $result->fetch_object();
+            if($user->user_type == 'admin'){
+
+                return true;
+
+                }
+            else return false;
+        }
+        else
+        return false;
+    }
+
+    /**
      * log in with post data
      */
     private function dologinWithPostData()
@@ -68,7 +104,7 @@ class Login
 
                 // database query, getting all the info of the selected user (allows login via email address in the
                 // username field)
-                $sql = "SELECT user_name, user_email, user_password_hash
+                $sql = "SELECT user_name, user_email, user_password_hash, user_active
                         FROM users
                         WHERE user_name = '" . $user_name . "' OR user_email = '" . $user_name . "';";
                 $result_of_login_check = $this->db_connection->query($sql);
@@ -76,12 +112,19 @@ class Login
                 // if this user exists
                 if ($result_of_login_check->num_rows == 1) {
 
+
                     // get result row (as an object)
                     $result_row = $result_of_login_check->fetch_object();
+                    if($result_row->user_active == 0){
+                        $this->errors[] = "This user does not exist.";
+                        return 0;
+                    }
 
                     // using PHP 5.5's password_verify() function to check if the provided password fits
                     // the hash of that user's password
                     if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
+
+
 
                         // write user data into PHP SESSION (a file on your server)
                         $_SESSION['user_name'] = $result_row->user_name;
@@ -113,21 +156,5 @@ class Login
 
     }
 
-    /**
-     * simply return the current state of the user's login
-     * @return boolean user's login status
-     */
-    public function isUserLoggedIn()
-    {
-        if (isset($_SESSION['user_login_status']) AND $_SESSION['user_login_status'] == 1) {
-            return true;
-        }
-        // default return
-        return false;
-    }
-    public function isAdmin(){
-        if (isset($_SESSION['user_login_status']) AND $_SESSION['user_login_status'] == 1) {
 
-        }
-    }
 }

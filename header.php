@@ -5,19 +5,15 @@
  * Date: 5/21/14
  * Time: 3:17 PM
  */
-/**
- * A simple, clean and secure PHP Login Script / MINIMAL VERSION
- * For more versions (one-file, advanced, framework-like) visit http://www.php-login.net
- *
- * Uses PHP SESSIONS, modern password-hashing and salting and gives the basic functions a proper login system needs.
- *
- * @author Panique
- * @link https://github.com/panique/php-login-minimal/
- * @license http://opensource.org/licenses/MIT MIT License
- */
 
-
+ini_set('error_reporting', E_ALL);
+ini_set('display_startup_errors', 1);
+ini_set("log_errors",1);
+ini_set("display_errors",1);
+ini_set("error_log", "php_error.log"); // make sure this is chmodded to 0777 permissions
+require_once('functions.php');
 include('classes/login.php');
+
 
 
 
@@ -50,7 +46,8 @@ $login = new Login();
   <head>
       <meta http-equiv="content-type" content="text/html; charset=UTF-8">
       <meta charset="utf-8">
-      <title>Island of Brecqhou</title>
+      <title>Island of Brecqhou Marine & Diving Operations</title>
+      <link rel="shortcut icon" href="images/favicon.png">
       <meta name="generator" content="Bootply" />
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
       <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -72,7 +69,7 @@ $login = new Login();
   <body>
   <?php
 
-if ($login->isUserLoggedIn() == true) {
+  if ($login->isUserLoggedIn() == true) {
     include 'views/navigation.php';
 }
 
